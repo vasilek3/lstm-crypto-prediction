@@ -48,7 +48,7 @@ def create_sequences(data, seq_length=24):
     xs, ys = [], []
     for i in range(len(data) - seq_length):
         x = data[i:(i + seq_length)]
-        y = data[i + seq_length][3]  # Індекс 'close'
+        y = data[i + seq_length][3]  # 'close' index
         xs.append(x)
         ys.append(y)
     return np.array(xs), np.array(ys)
@@ -70,10 +70,10 @@ def main():
     print("📊 Fetching data...")
     try:
         df = fetch_data()
-        print("✅ Data columns:", df.columns.tolist())
+        print("Data columns:", df.columns.tolist())
         df = add_indicators(df)
     except Exception as e:
-        print(f"🔴 Error: {e}")
+        print(f"Error: {e}")
         return
 
     # Підготовка даних
@@ -94,7 +94,7 @@ def main():
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    print("🔁 Training model...")
+    print("Training model...")
     model.train()
     for epoch in range(1000):
         optimizer.zero_grad()
@@ -111,13 +111,13 @@ def main():
         y_pred = model(X_tensor)
         mse = criterion(y_pred, y_tensor)
         rmse = torch.sqrt(mse)
-        print(f"\n📉 Model RMSE: {rmse.item():.4f}")
+        print(f"\n Model RMSE: {rmse.item():.4f}")
 
     # Прогноз
     last_seq = torch.tensor(data_scaled[-24:], dtype=torch.float32).unsqueeze(0)
     pred_scaled = model(last_seq).item()
     predicted_price = pred_scaled * scaler.scale_[3] + scaler.mean_[3]
-    print(f"\n🔮 Predicted Price: ${predicted_price:.2f}")
+    print(f"\n Predicted Price: ${predicted_price:.2f}")
 
     # Візуалізація
     plt.figure(figsize=(15, 6))
