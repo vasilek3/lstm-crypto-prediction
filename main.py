@@ -29,7 +29,7 @@ def fetch_data(ticker='BTC-USD', period='500d', interval='1h'):
 def add_indicators(df):
     close = df['close'].squeeze()
 
-    # Розрахунок індикаторів
+    
     df['rsi'] = ta.momentum.RSIIndicator(close=close, window=14).rsi()
     macd = ta.trend.MACD(close=close)
     df['macd'] = macd.macd()
@@ -67,7 +67,7 @@ class LSTMModel(nn.Module):
 
 
 def main():
-    print("📊 Fetching data...")
+    print("Fetching data...")
     try:
         df = fetch_data()
         print("Data columns:", df.columns.tolist())
@@ -76,7 +76,7 @@ def main():
         print(f"Error: {e}")
         return
 
-    # Підготовка даних
+    
     features = ['open', 'high', 'low', 'close', 'volume', 'rsi', 'macd', 'macd_signal',
                 'bb_high', 'bb_low', 'ema_10', 'ema_20', 'hour', 'dayofweek']
     data = df[features].values
@@ -84,12 +84,10 @@ def main():
     scaler = StandardScaler()
     data_scaled = scaler.fit_transform(data)
 
-    # Створення послідовностей
     X, y = create_sequences(data_scaled)
     X_tensor = torch.tensor(X, dtype=torch.float32)
     y_tensor = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
 
-    # Навчання моделі
     model = LSTMModel(input_size=X.shape[2])
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -113,20 +111,16 @@ def main():
         rmse = torch.sqrt(mse)
         print(f"\n Model RMSE: {rmse.item():.4f}")
 
-    # Прогноз
     last_seq = torch.tensor(data_scaled[-24:], dtype=torch.float32).unsqueeze(0)
     pred_scaled = model(last_seq).item()
     predicted_price = pred_scaled * scaler.scale_[3] + scaler.mean_[3]
     print(f"\n Predicted Price: ${predicted_price:.2f}")
 
-    # Візуалізація
     plt.figure(figsize=(15, 6))
 
-    # Останні 11 годин
     last_11 = df.tail(11)
     plt.plot(last_11['timestamp'], last_11['close'], 'b-o', label='Actual Price')
 
-    # Прогноз
     prediction_time = last_11['timestamp'].iloc[-1] + pd.Timedelta(hours=1)
     plt.axvline(x=prediction_time, color='r', linestyle='--', label='Prediction')
     plt.plot(prediction_time, predicted_price, 'ro', markersize=10)
